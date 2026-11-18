@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Análisis y Diseño de Sistemas A · Estudio Interactivo</title>
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('ads_theme_v1');
+        if (saved === 'dark' || saved === 'light') {
+          document.documentElement.setAttribute('data-theme', saved);
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="top-nav">
+    <div class="nav-inner">
+      <a href="#home" class="brand" aria-label="Ir al inicio">
+        <span class="brand-mark" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+            <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+            <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
+            <path d="M6.5 10v4a3.5 3.5 0 0 0 3.5 3.5h4"></path>
+          </svg>
+        </span>
+        <span class="brand-text">
+          <strong>Análisis y Diseño A</strong>
+          <small>Estudio Interactivo U1–U6</small>
+        </span>
+      </a>
+
+      <nav class="nav-links" aria-label="Navegación principal">
+        <a href="#home" class="nav-link" data-nav="home">Inicio</a>
+        <a href="#quiz" class="nav-link" data-nav="quiz">Exámenes</a>
+        <a href="#maps" class="nav-link" data-nav="maps">Mapas y Gráficos</a>
+        <a href="#inquiry" class="nav-link" data-nav="inquiry">Indagación</a>
+      </nav>
+
+      <div class="nav-actions">
+        <button type="button" class="btn btn-ghost btn-sm" id="btn-open-glossary" title="Abrir Glosario de Términos">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+          <span>Glosario</span>
+        </button>
+        <button type="button" class="btn btn-ghost btn-icon" id="btn-theme-toggle" aria-label="Cambiar tema claro u oscuro" title="Cambiar tema">
+          <span id="theme-icon"></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="app-main" class="app-main" tabindex="-1"></main>
+
+  <footer class="app-footer">
+    <div class="footer-inner">
+      <span>Análisis y Diseño de Sistemas A · 100% local y offline (HTML + CSS + JS)</span>
+      <span>Basado íntegramente en el apunte oficial · Unidades 1 a 6</span>
+    </div>
+  </footer>
+
+  <div id="modal-root" aria-live="polite"></div>
+  <div id="toast-root" class="toast-root" aria-live="polite"></div>
+
+  <script src="js/data-units.js"></script>
+  <script src="js/data-quiz.js"></script>
+  <script src="js/data-maps.js"></script>
+  <script src="js/data-inquiry.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
