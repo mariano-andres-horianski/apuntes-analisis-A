@@ -33,6 +33,7 @@
       quizHistory: [],
       wrongQuestionIds: [],
       exploredMaps: [],
+      completedChapters: [],
       inquiryStatus: {},
       inquiryNotes: {}
     };
@@ -49,6 +50,7 @@
         quizHistory: Array.isArray(parsed.quizHistory) ? parsed.quizHistory : [],
         wrongQuestionIds: Array.isArray(parsed.wrongQuestionIds) ? parsed.wrongQuestionIds : [],
         exploredMaps: Array.isArray(parsed.exploredMaps) ? parsed.exploredMaps : [],
+        completedChapters: Array.isArray(parsed.completedChapters) ? parsed.completedChapters : [],
         inquiryStatus: parsed.inquiryStatus && typeof parsed.inquiryStatus === 'object' ? parsed.inquiryStatus : {},
         inquiryNotes: parsed.inquiryNotes && typeof parsed.inquiryNotes === 'object' ? parsed.inquiryNotes : {}
       };
@@ -124,6 +126,10 @@
     return Array.isArray(global.ADS_GLOSSARY) ? global.ADS_GLOSSARY : [];
   }
 
+  function getJourneyPool() {
+    return Array.isArray(global.ADS_JOURNEY) ? global.ADS_JOURNEY : [];
+  }
+
   function unitBadgeClass(unit) {
     if (unit === 'integradora') return 'badge-primary';
     var map = {
@@ -175,6 +181,10 @@
       activeNodeId: 'hilos',
       zoom: 100,
       fullscreen: false
+    },
+    journey: {
+      chapterIndex: 0,
+      checkSelections: {}
     },
     inquiry: {
       unitFilter: 'all', // 'all' | 'integradora' | 1..6
@@ -500,6 +510,7 @@
         '    <ul class="unit-topics">' + topicsHtml + '</ul>' +
         '  </div>' +
         '  <div class="unit-actions">' +
+        '    <a href="#journey?unit=' + u.id + '" class="btn btn-ghost btn-sm">Recorrido</a>' +
         '    <a href="#quiz?unit=' + u.id + '" class="btn btn-secondary btn-sm">Examen ' + escapeHtml(u.code) + '</a>' +
         '    <a href="#maps?unit=' + u.id + '" class="btn btn-ghost btn-sm">Mapas</a>' +
         '    <a href="#inquiry?unit=' + u.id + '" class="btn btn-ghost btn-sm">Indagación</a>' +
@@ -508,11 +519,13 @@
       );
     }).join('');
 
+    var journeyCount = getJourneyPool().length;
+
     return (
       '<section class="blueprint-hero">' +
       '  <span class="hero-eyebrow">Análisis y Diseño de Sistemas A · Plataforma de Estudio Offline</span>' +
-      '  <h1>Dominá la materia con exámenes, mapas interactivos e indagación profunda</h1>' +
-      '  <p class="hero-lead">Elegí cómo querés entrenar hoy a partir del apunte oficial (Unidades 1 a 6): evaluaciones multiple choice con autocorrección explicada al entregar, diagramas SVG interactivos y preguntas abiertas para pensar como en un final.</p>' +
+      '  <h1>Dominá la materia desde cero, con animaciones, exámenes y mapas</h1>' +
+      '  <p class="hero-lead">Elegí cómo querés entrenar hoy a partir del apunte oficial (Unidades 1 a 6): recorré los temas desde el principio con simulaciones interactivas, evaluaciones multiple choice con autocorrección, diagramas SVG y preguntas de indagación.</p>' +
       '  <div class="kpi-strip">' +
       '    <div class="kpi-card"><div class="kpi-value">' + attempts + '</div><div class="kpi-label">Exámenes rendidos</div></div>' +
       '    <div class="kpi-card"><div class="kpi-value">' + avgPct + '</div><div class="kpi-label">Promedio general</div></div>' +
@@ -523,9 +536,24 @@
 
       '<section aria-label="Modos principales de estudio">' +
       '  <div class="section-heading">' +
-      '    <div><h2>Elegí tu modo de estudio</h2><p>Tres herramientas complementarias para recordar, visualizar y argumentar cada unidad.</p></div>' +
+      '    <div><h2>Elegí tu modo de estudio</h2><p>Cuatro herramientas complementarias para aprender desde cero, practicar, visualizar y argumentar cada unidad.</p></div>' +
       '  </div>' +
       '  <div class="pillars-grid">' +
+      '    <article class="pillar-card">' +
+      '      <div>' +
+      '        <div class="pillar-icon" style="background:var(--success-soft);color:var(--success);">' +
+      '          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>' +
+      '        </div>' +
+      '        <h3>Aprender desde cero (Animado)</h3>' +
+      '        <p>Recorrido guiado capítulo a capítulo desde la base de la materia hasta SDD con laboratorios interactivos y simulaciones en vivo.</p>' +
+      '        <div class="pillar-meta">' +
+      '          <span class="badge badge-success">' + journeyCount + ' capítulos</span>' +
+      '          <span class="badge">8 animaciones interactivas</span>' +
+      '        </div>' +
+      '      </div>' +
+      '      <a href="#journey" class="btn btn-primary">Comenzar recorrido →</a>' +
+      '    </article>' +
+
       '    <article class="pillar-card">' +
       '      <div>' +
       '        <div class="pillar-icon" style="background:var(--primary-soft);color:var(--primary);">' +
@@ -1597,6 +1625,210 @@
   }
 
   // =========================================================================
+  // 11B. Guided Journey Renderer & Events
+  // =========================================================================
+  function unmountJourneyLabs() {
+    if (global.ADS_JOURNEY_LABS && typeof global.ADS_JOURNEY_LABS.unmountLabs === 'function') {
+      global.ADS_JOURNEY_LABS.unmountLabs();
+    }
+  }
+
+  function renderJourney() {
+    var chapters = getJourneyPool();
+    if (chapters.length === 0) {
+      return '<div class="empty-state">No hay capítulos cargados para el recorrido guiado.</div>';
+    }
+    var idx = Math.max(0, Math.min(chapters.length - 1, runtime.journey.chapterIndex || 0));
+    runtime.journey.chapterIndex = idx;
+    var ch = chapters[idx];
+
+    var doneMap = {};
+    state.completedChapters.forEach(function (id) { doneMap[id] = true; });
+    var completedCount = chapters.filter(function (c) { return !!doneMap[c.id]; }).length;
+
+    var stepperHtml = chapters.map(function (item, cIdx) {
+      var cls = 'journey-step-btn';
+      if (cIdx === idx) cls += ' is-active';
+      if (doneMap[item.id]) cls += ' is-done';
+      return (
+        '<button type="button" class="' + cls + '" data-journey-step="' + cIdx + '">' +
+        '  <span class="journey-step-num">' + (doneMap[item.id] ? '✓ ' : '') + 'Cap. ' + item.number + ' · U' + item.unit + '</span>' +
+        '  <span class="journey-step-title">' + escapeHtml(item.title) + '</span>' +
+        '</button>'
+      );
+    }).join('');
+
+    var conceptsHtml = ch.concepts.map(function (c) {
+      return (
+        '<div class="journey-concept-card">' +
+        '  <h3>' + escapeHtml(c.title) + '</h3>' +
+        '  <p>' + escapeHtml(c.text) + '</p>' +
+        '</div>'
+      );
+    }).join('');
+
+    var labHtml = global.ADS_JOURNEY_LABS
+      ? global.ADS_JOURNEY_LABS.renderLab(ch.labId)
+      : '<div class="empty-state">Laboratorio no disponible.</div>';
+
+    var qc = ch.quickCheck;
+    var chosenIdx = Object.prototype.hasOwnProperty.call(runtime.journey.checkSelections, ch.id)
+      ? runtime.journey.checkSelections[ch.id]
+      : null;
+    var letters = ['A', 'B', 'C', 'D'];
+    var qcOptsHtml = qc.options.map(function (opt, oIdx) {
+      var cls = 'option-btn';
+      if (chosenIdx !== null) {
+        if (oIdx === qc.correctIndex) cls += ' is-selected';
+      }
+      var extraStyle = '';
+      if (chosenIdx !== null && oIdx === chosenIdx && oIdx !== qc.correctIndex) {
+        extraStyle = ' style="border-color:var(--danger);background:var(--danger-soft);"';
+      } else if (chosenIdx !== null && oIdx === qc.correctIndex) {
+        extraStyle = ' style="border-color:var(--success);background:var(--success-soft);"';
+      }
+      return (
+        '<button type="button" class="' + cls + '" data-journey-qc="' + oIdx + '"' + extraStyle + '>' +
+        '  <span class="option-letter">' + letters[oIdx] + '</span>' +
+        '  <span>' + escapeHtml(opt) + '</span>' +
+        '</button>'
+      );
+    }).join('');
+
+    var qcFeedbackHtml = '';
+    if (chosenIdx !== null) {
+      var isOk = chosenIdx === qc.correctIndex;
+      qcFeedbackHtml =
+        '<div class="explanation-box" style="background:' + (isOk ? 'var(--success-soft)' : 'var(--warning-soft)') + ';">' +
+        '  <strong>' + (isOk ? '✓ ¡Correcto!' : 'Revisá ese punto:') + '</strong> ' + escapeHtml(qc.feedback) +
+        '</div>';
+    }
+
+    var isDone = !!doneMap[ch.id];
+
+    return (
+      '<div class="page-header">' +
+      '  <div>' +
+      '    <h1>Aprender desde cero · Recorrido Guiado</h1>' +
+      '    <p>Un camino paso a paso desde la Teoría General de Sistemas (U1) hasta Spec-Driven Development con IA (U6) con animaciones interactivas.</p>' +
+      '  </div>' +
+      '  <span class="badge badge-success" style="font-size:0.86rem;padding:0.4rem 0.85rem;">Progreso: ' + completedCount + ' / ' + chapters.length + ' capítulos</span>' +
+      '</div>' +
+
+      '<div class="journey-stepper" role="navigation" aria-label="Capítulos del recorrido">' + stepperHtml + '</div>' +
+
+      '<section class="journey-hero">' +
+      '  <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.5rem;">' +
+      '    <span class="badge ' + unitBadgeClass(ch.unit) + '">' + escapeHtml(ch.badge) + '</span>' +
+      '    <button type="button" class="btn ' + (isDone ? 'btn-secondary' : 'btn-ghost') + ' btn-sm" id="btn-toggle-ch-done">' +
+             (isDone ? '✓ Capítulo completado' : 'Marcar como completado') + '</button>' +
+      '  </div>' +
+      '  <h1>' + escapeHtml(ch.title) + '</h1>' +
+      '  <p style="margin:0 0 0.75rem;color:var(--ink-secondary);font-weight:600;">' + escapeHtml(ch.subtitle) + '</p>' +
+      '  <p class="journey-story">' + escapeHtml(ch.storyIntro) + '</p>' +
+      '  <div class="journey-concepts-grid">' + conceptsHtml + '</div>' +
+      '</section>' +
+
+      '<section class="journey-lab-card">' +
+      '  <div class="journey-lab-head">' +
+      '    <h2>' + escapeHtml(ch.labTitle) + '</h2>' +
+      '    <p>' + escapeHtml(ch.labHint) + '</p>' +
+      '  </div>' +
+      '  <div id="journey-lab-container">' + labHtml + '</div>' +
+      '</section>' +
+
+      '<section class="journey-check-card">' +
+      '  <span class="badge badge-primary" style="margin-bottom:0.5rem;">Micro-chequeo de comprensión</span>' +
+      '  <h3 style="margin:0 0 0.9rem;font-size:1.05rem;">' + escapeHtml(qc.prompt) + '</h3>' +
+      '  <div class="options-list">' + qcOptsHtml + '</div>' +
+      qcFeedbackHtml +
+      '</section>' +
+
+      '<div class="journey-footer-nav">' +
+      '  <button type="button" class="btn btn-secondary" id="btn-journey-prev"' + (idx === 0 ? ' disabled' : '') + '>← Capítulo anterior</button>' +
+      '  <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">' +
+      '    <a href="#maps?unit=' + ch.unit + '" class="btn btn-ghost btn-sm">Ver mapa de Unidad ' + ch.unit + '</a>' +
+      '    <a href="#quiz?unit=' + ch.unit + '" class="btn btn-ghost btn-sm">Examen de Unidad ' + ch.unit + '</a>' +
+      '  </div>' +
+      (idx < chapters.length - 1
+        ? '<button type="button" class="btn btn-primary" id="btn-journey-next">Siguiente capítulo →</button>'
+        : '<a href="#quiz" class="btn btn-primary">Ir al Simulacro Final →</a>') +
+      '</div>'
+    );
+  }
+
+  function bindJourneyEvents(main) {
+    var chapters = getJourneyPool();
+    var ch = chapters[runtime.journey.chapterIndex];
+    if (!ch) return;
+
+    var labContainer = document.getElementById('journey-lab-container');
+    if (labContainer && global.ADS_JOURNEY_LABS) {
+      global.ADS_JOURNEY_LABS.mountLab(ch.labId, labContainer);
+      fitSvgTextsToBoxes(labContainer);
+    }
+
+    var stepBtns = main.querySelectorAll('[data-journey-step]');
+    for (var i = 0; i < stepBtns.length; i++) {
+      stepBtns[i].addEventListener('click', function (ev) {
+        runtime.journey.chapterIndex = Number(ev.currentTarget.getAttribute('data-journey-step'));
+        render();
+        if (typeof window !== 'undefined' && window.scrollTo) window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
+
+    var qcBtns = main.querySelectorAll('[data-journey-qc]');
+    for (var j = 0; j < qcBtns.length; j++) {
+      qcBtns[j].addEventListener('click', function (ev) {
+        var optIdx = Number(ev.currentTarget.getAttribute('data-journey-qc'));
+        runtime.journey.checkSelections[ch.id] = optIdx;
+        if (optIdx === ch.quickCheck.correctIndex && state.completedChapters.indexOf(ch.id) === -1) {
+          state.completedChapters.push(ch.id);
+          saveState();
+        }
+        render();
+      });
+    }
+
+    var toggleDone = document.getElementById('btn-toggle-ch-done');
+    if (toggleDone) {
+      toggleDone.addEventListener('click', function () {
+        var pos = state.completedChapters.indexOf(ch.id);
+        if (pos === -1) {
+          state.completedChapters.push(ch.id);
+          showToast('Capítulo marcado como completado');
+        } else {
+          state.completedChapters.splice(pos, 1);
+        }
+        saveState();
+        render();
+      });
+    }
+
+    var prevBtn = document.getElementById('btn-journey-prev');
+    if (prevBtn) {
+      prevBtn.addEventListener('click', function () {
+        if (runtime.journey.chapterIndex > 0) {
+          runtime.journey.chapterIndex -= 1;
+          render();
+          if (typeof window !== 'undefined' && window.scrollTo) window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      });
+    }
+
+    var nextBtn = document.getElementById('btn-journey-next');
+    if (nextBtn) {
+      nextBtn.addEventListener('click', function () {
+        if (runtime.journey.chapterIndex < chapters.length - 1) {
+          runtime.journey.chapterIndex += 1;
+          render();
+          if (typeof window !== 'undefined' && window.scrollTo) window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      });
+    }
+  }
+
+  // =========================================================================
   // 12. Router & Event Binding
   // =========================================================================
   function parseHash() {
@@ -1604,7 +1836,7 @@
     var raw = (window.location.hash || '#home').replace(/^#/, '');
     var parts = raw.split('?');
     var route = parts[0] || 'home';
-    if (['home', 'quiz', 'maps', 'inquiry'].indexOf(route) === -1) route = 'home';
+    if (['home', 'journey', 'quiz', 'maps', 'inquiry'].indexOf(route) === -1) route = 'home';
 
     var params = {};
     if (parts[1]) {
@@ -1621,7 +1853,28 @@
     if (runtime.route === 'quiz' && parsed.route !== 'quiz') {
       stopQuizTimer();
     }
+    if (runtime.route === 'journey' && parsed.route !== 'journey') {
+      unmountJourneyLabs();
+    }
     runtime.route = parsed.route;
+
+    if (parsed.route === 'journey') {
+      var chapters = getJourneyPool();
+      if (parsed.params.chapter) {
+        var cNum = Number(parsed.params.chapter);
+        if (cNum >= 1 && cNum <= chapters.length) {
+          runtime.journey.chapterIndex = cNum - 1;
+        }
+      } else if (parsed.params.unit) {
+        var uNum = Number(parsed.params.unit);
+        for (var ci = 0; ci < chapters.length; ci++) {
+          if (chapters[ci].unit === uNum) {
+            runtime.journey.chapterIndex = ci;
+            break;
+          }
+        }
+      }
+    }
 
     if (parsed.route === 'quiz' && parsed.params.unit) {
       var u = Number(parsed.params.unit);
@@ -1667,7 +1920,9 @@
     var main = document.getElementById('app-main');
     if (!main) return;
 
-    if (runtime.route === 'quiz') {
+    if (runtime.route === 'journey') {
+      bindJourneyEvents(main);
+    } else if (runtime.route === 'quiz') {
       bindQuizEvents(main);
     } else if (runtime.route === 'maps') {
       bindMapsEvents(main);
@@ -2042,6 +2297,7 @@
 
   function render() {
     if (typeof document === 'undefined') return;
+    unmountJourneyLabs();
     updateNavActiveState();
     var main = document.getElementById('app-main');
     if (!main) return;
@@ -2052,8 +2308,16 @@
       main.classList.remove('is-maps-wide');
     }
 
+    if (runtime.route === 'maps' || runtime.route === 'journey') {
+      main.classList.add('is-wide');
+    } else {
+      main.classList.remove('is-wide');
+    }
+
     if (runtime.route === 'home') {
       main.innerHTML = renderHome();
+    } else if (runtime.route === 'journey') {
+      main.innerHTML = renderJourney();
     } else if (runtime.route === 'quiz') {
       main.innerHTML = renderQuiz();
     } else if (runtime.route === 'maps') {

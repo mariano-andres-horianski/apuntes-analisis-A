@@ -14,6 +14,11 @@ Todo el contenido —preguntas, diagramas, pistas y definiciones— está constr
 
 ## ¿Qué incluye?
 
+### 0. Aprender desde cero — Recorrido Guiado (`#journey`)
+- **8 capítulos progresivos** que explican la materia desde cero (de la U1 a la U6) conectando teoría, diseño y metodología.
+- **8 laboratorios interactivos animados** integrados por capítulo (animaciones SVG paso a paso, simuladores interactivos y juegos de matching).
+- **Micro-chequeos de comprensión** al final de cada capítulo con progreso persistente y acceso directo al resto de los módulos de la unidad.
+
 ### 1. Exámenes Multiple Choice (`#quiz`)
 - **72 preguntas** redactadas con foco conceptual, comparativo y práctico (**12 por unidad** de la U1 a la U6).
 - **Tres modos de evaluación**:
@@ -39,7 +44,7 @@ Todo el contenido —preguntas, diagramas, pistas y definiciones— está constr
 ### 4. Extras transversales
 - **Glosario buscable**: 42 conceptos clave del apunte filtrables por texto y unidad desde cualquier pantalla.
 - **Tema Claro / Oscuro**: conmutador persistente en la barra superior.
-- **Progreso local**: historial de exámenes, preguntas a repasar, mapas explorados, estado de indagación y notas personales guardados en `localStorage` (con respaldo en memoria si el navegador restringe almacenamiento en archivos locales).
+- **Progreso local**: capítulos completados en el recorrido, historial de exámenes, preguntas a repasar, mapas explorados, estado de indagación y notas personales guardados en `localStorage` (con respaldo en memoria si el navegador restringe almacenamiento en archivos locales).
 
 ---
 
@@ -81,7 +86,9 @@ No requiere instalar Node, Python ni levantar ningún servidor:
 │   ├── data-quiz.js       # Banco de 72 preguntas multiple choice (12 por unidad)
 │   ├── data-maps.js       # 14 diagramas SVG interactivos + nodos de inspección
 │   ├── data-inquiry.js    # 50 preguntas abiertas de indagación profunda
-│   └── app.js             # Router, motor de exámenes, visor de mapas y estado local
+│   ├── data-journey.js    # 8 capítulos progresivos (U1–U6) y micro-chequeos
+│   ├── journey-labs.js    # 8 laboratorios interactivos animados en SVG y simuladores
+│   └── app.js             # Router, recorrido guiado, exámenes, mapas y estado local
 └── README.md
 ```
 
