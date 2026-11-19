@@ -1520,6 +1520,10 @@ textarea {
   animation: shakeAlert 0.45s ease;
 }
 
+.anim-pop {
+  animation: popIn 0.28s ease;
+}
+
 .journey-stepper {
   display: grid;
   grid-template-columns: repeat(8, minmax(0, 1fr));
@@ -1767,15 +1771,25 @@ textarea {
   margin-top: 0.5rem;
 }
 
+.lab-cycle-stage-wrap {
+  margin-top: 0.75rem;
+}
+
 .lab-cycle-step {
   padding: 0.5rem 0.72rem;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-strong);
   background: var(--surface-elevated);
+  font-family: inherit;
   font-size: 0.81rem;
   font-weight: 600;
   color: var(--ink-secondary);
+  cursor: pointer;
   transition: transform 0.16s ease, background-color 0.16s ease, border-color 0.16s ease;
+}
+
+.lab-cycle-step:hover {
+  border-color: var(--primary);
 }
 
 .lab-cycle-step.is-active {
@@ -1973,6 +1987,7 @@ textarea {
 @media (prefers-reduced-motion: reduce) {
   .anim-flow,
   .anim-shake,
+  .anim-pop,
   .lab-cycle-step.is-active,
   .lab-pipe-node.is-waiting,
   .journey-hero {
