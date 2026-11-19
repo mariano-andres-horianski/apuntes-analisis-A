@@ -186,6 +186,9 @@
       chapterIndex: 0,
       checkSelections: {}
     },
+    practice: {
+      tool: 'flashcards'
+    },
     inquiry: {
       unitFilter: 'all', // 'all' | 'integradora' | 1..6
       typeFilter: 'all', // 'all' | 'comprension' | 'contraste' | 'caso' | 'integracion'
@@ -1633,6 +1636,12 @@
     }
   }
 
+  function unmountPractice() {
+    if (global.ADS_PRACTICE && typeof global.ADS_PRACTICE.unmount === 'function') {
+      global.ADS_PRACTICE.unmount();
+    }
+  }
+
   function renderJourney() {
     var chapters = getJourneyPool();
     if (chapters.length === 0) {
@@ -1836,7 +1845,7 @@
     var raw = (window.location.hash || '#home').replace(/^#/, '');
     var parts = raw.split('?');
     var route = parts[0] || 'home';
-    if (['home', 'journey', 'quiz', 'maps', 'inquiry'].indexOf(route) === -1) route = 'home';
+    if (['home', 'journey', 'quiz', 'maps', 'inquiry', 'practice'].indexOf(route) === -1) route = 'home';
 
     var params = {};
     if (parts[1]) {
@@ -1856,7 +1865,17 @@
     if (runtime.route === 'journey' && parsed.route !== 'journey') {
       unmountJourneyLabs();
     }
+    if (runtime.route === 'practice' && parsed.route !== 'practice') {
+      unmountPractice();
+    }
     runtime.route = parsed.route;
+
+    if (parsed.route === 'practice' && parsed.params.tool) {
+      var validPracticeTools = (global.ADS_PRACTICE && global.ADS_PRACTICE.validTools) || ['flashcards', 'bugs', 'interview', 'duels', 'cases'];
+      if (validPracticeTools.indexOf(parsed.params.tool) !== -1) {
+        runtime.practice.tool = parsed.params.tool;
+      }
+    }
 
     if (parsed.route === 'journey') {
       var chapters = getJourneyPool();
@@ -1928,6 +1947,8 @@
       bindMapsEvents(main);
     } else if (runtime.route === 'inquiry') {
       bindInquiryEvents(main);
+    } else if (runtime.route === 'practice' && global.ADS_PRACTICE) {
+      global.ADS_PRACTICE.mount(main, runtime.practice.tool);
     }
   }
 
@@ -2298,6 +2319,7 @@
   function render() {
     if (typeof document === 'undefined') return;
     unmountJourneyLabs();
+    unmountPractice();
     updateNavActiveState();
     var main = document.getElementById('app-main');
     if (!main) return;
@@ -2308,7 +2330,7 @@
       main.classList.remove('is-maps-wide');
     }
 
-    if (runtime.route === 'maps' || runtime.route === 'journey') {
+    if (runtime.route === 'maps' || runtime.route === 'journey' || runtime.route === 'practice') {
       main.classList.add('is-wide');
     } else {
       main.classList.remove('is-wide');
@@ -2324,6 +2346,8 @@
       main.innerHTML = renderMaps();
     } else if (runtime.route === 'inquiry') {
       main.innerHTML = renderInquiry();
+    } else if (runtime.route === 'practice') {
+      main.innerHTML = global.ADS_PRACTICE ? global.ADS_PRACTICE.render(runtime.practice.tool) : '';
     }
 
     bindCurrentViewEvents();

@@ -41,10 +41,18 @@ Todo el contenido —preguntas, diagramas, pistas y definiciones— está constr
 - **Recuerdo activo**: cada tarjeta oculta por defecto los puntos clave de respuesta y una **repregunta de profundización** estilo mesa de examen.
 - **Seguimiento personal**: estados de dominio (*Pendiente*, *Repasar*, *Dominada*), bloque para escribir notas propias con autoguardado y **Modo Oral** (pregunta al azar en ventana focalizada).
 
-### 4. Extras transversales
+### 4. Entrenamiento Activo (`#practice`)
+Sección aislada con **5 páginas dedicadas** para practicar habilidades clave antes de un parcial o final:
+- **Flashcards inteligentes (`tool=flashcards`)**: **56 tarjetas** (glosario U1–U6 + términos técnicos extra) con repetición espaciada en `localStorage` (*Lo sé / Dudé / Ni idea*).
+- **Cazador de errores (`tool=bugs`)**: **4 diagramas SVG interactivos** (*Casos de Uso*, *Clases / Dominio*, *Secuencia DSS* y *DER*), cada uno con **3 errores conceptuales plantados** para diagnosticar.
+- **Entrevista con el cliente (`tool=interview`)**: **3 transcripciones desordenadas** (**24 frases**) para arrastrar o etiquetar como **RF**, **RNF**, **Regla de Negocio** o **Ruido / Ambigüedad**.
+- **Duelos “X vs. Y” (`tool=duels`)**: comparativa rápida y **mini-juego de 32 escenarios** sobre **8 pares clásicos de examen** (*Verificación vs. Validación*, *Agregación vs. Composición*, *«include» vs. «extend»*, etc.).
+- **Mini casos de estudio (`tool=cases`)**: **4 enunciados de parcial** con borrador autoguardado, **checklist de 8 puntos** y **solución de referencia** desplegable.
+
+### 5. Extras transversales
 - **Glosario buscable**: 42 conceptos clave del apunte filtrables por texto y unidad desde cualquier pantalla.
 - **Tema Claro / Oscuro**: conmutador persistente en la barra superior.
-- **Progreso local**: capítulos completados en el recorrido, historial de exámenes, preguntas a repasar, mapas explorados, estado de indagación y notas personales guardados en `localStorage` (con respaldo en memoria si el navegador restringe almacenamiento en archivos locales).
+- **Progreso local**: capítulos completados en el recorrido, avance en entrenamiento (`ads_practice_state_v1`), historial de exámenes, preguntas a repasar, mapas explorados, estado de indagación y notas personales guardados en `localStorage` (con respaldo en memoria si el navegador restringe almacenamiento en archivos locales).
 
 ---
 
@@ -80,7 +88,8 @@ No requiere instalar Node, Python ni levantar ningún servidor:
 ├── index.html             # Entrada principal SPA (carga scripts clásicos, sin bundler)
 ├── apunte.md              # Apunte completo de Análisis y Diseño de Sistemas A (U1–U6)
 ├── css/
-│   └── styles.css         # Sistema de diseño claro/oscuro, grillas y visor SVG
+│   ├── styles.css         # Sistema de diseño claro/oscuro, grillas y visor SVG
+│   └── practice.css       # Estilos aislados de la sección Entrenamiento (#practice)
 ├── js/
 │   ├── data-units.js      # Metadata de unidades (U1–U6) y glosario de 42 términos
 │   ├── data-quiz.js       # Banco de 72 preguntas multiple choice (12 por unidad)
@@ -88,6 +97,8 @@ No requiere instalar Node, Python ni levantar ningún servidor:
 │   ├── data-inquiry.js    # 50 preguntas abiertas de indagación profunda
 │   ├── data-journey.js    # 8 capítulos progresivos (U1–U6) y micro-chequeos
 │   ├── journey-labs.js    # 8 laboratorios interactivos animados en SVG y simuladores
+│   ├── data-practice.js   # Datos de entrenamiento (flashcards, bugs, entrevistas, duelos, casos)
+│   ├── practice.js        # Motor aislado de las 5 herramientas de Entrenamiento
 │   └── app.js             # Router, recorrido guiado, exámenes, mapas y estado local
 └── README.md
 ```
