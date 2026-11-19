@@ -369,7 +369,7 @@
       '    <div class="lab-svg-wrap lab-cycle-stage-wrap">' +
       '      <svg id="l3-cycle-svg" viewBox="0 0 420 210" role="img" aria-label="Ilustración animada de la etapa actual del ciclo de vida"></svg>' +
       '    </div>' +
-      '    <div class="lab-status" id="l3-cycle-desc"></div>' +
+      '    <div class="lab-status lab-cycle-callout" id="l3-cycle-desc" aria-live="polite"></div>' +
       '  </div>' +
       '</div>'
     );
@@ -784,11 +784,13 @@
       timer = registerInterval(function () {
         curStep = (curStep + 1) % cycles[curCycle].length;
         renderTrack();
-      }, 2250);
+      }, 3250);
     }
 
     function renderTrack() {
       var list = cycles[curCycle];
+      var curItem = list[curStep];
+      var curTone = toneMap[curItem.tone] || toneMap.primary;
       track.innerHTML = list.map(function (st, idx) {
         return '<button type="button" class="lab-cycle-step' + (idx === curStep ? ' is-active' : '') + '" data-l3-step="' + idx + '">' + esc(st.name) + '</button>';
       }).join('');
@@ -800,8 +802,18 @@
           renderTrack();
         });
       }
-      cycleSvg.innerHTML = renderL3CycleVisual(curCycle, curStep, list[curStep], list.length);
-      descEl.textContent = list[curStep].desc;
+      cycleSvg.innerHTML = renderL3CycleVisual(curCycle, curStep, curItem, list.length);
+      descEl.style.setProperty('--callout-accent', curTone.accent);
+      descEl.style.setProperty('--callout-soft', curTone.soft);
+      descEl.innerHTML =
+        '<div class="lab-cycle-callout-head">' +
+        '  <span class="lab-cycle-callout-step">Etapa ' + (curStep + 1) + '/' + list.length + '</span>' +
+        '  <strong class="lab-cycle-callout-title">' + esc(curItem.name) + '</strong>' +
+        '</div>' +
+        '<p class="lab-cycle-callout-body">' + esc(curItem.desc) + '</p>';
+      descEl.classList.remove('anim-pop');
+      void descEl.offsetWidth;
+      descEl.classList.add('anim-pop');
     }
 
     function stopPlay() {
@@ -867,7 +879,7 @@
       '      <button type="button" class="btn btn-secondary btn-sm" id="l4-next-int">Siguiente pregunta</button>' +
       '    </div>' +
       '    <div class="lab-svg-wrap">' +
-      '      <svg id="l4-shape-svg" viewBox="0 0 360 190" role="img" aria-label="Forma animada de entrevista"></svg>' +
+      '      <svg id="l4-shape-svg" viewBox="0 0 420 208" role="img" aria-label="Forma animada de entrevista"></svg>' +
       '    </div>' +
       '    <div class="lab-status" id="l4-int-status"></div>' +
       '  </div>' +
@@ -888,7 +900,7 @@
       '        <div class="lab-gate-badge" id="l4-valid-res"></div>' +
       '      </div>' +
       '    </div>' +
-      '    <div class="lab-status" id="l4-dem-verdict"></div>' +
+      '    <div class="lab-status lab-cycle-callout" id="l4-dem-verdict" aria-live="polite"></div>' +
       '  </div>' +
       '</div>'
     );
@@ -906,33 +918,34 @@
 
     function drawShape() {
       var data = interviews[shape];
-      var polys = {
+      var bandsByShape = {
         piramide: [
-          '180,16 144,68 216,68',
-          '144,72 108,124 252,124 216,72',
-          '108,128 72,176 288,176 252,128'
+          { pts: '210,8 134,84 286,84', fs: 10.5, lines: [{ text: 'Cerrada', y: 62 }, { text: '/ Bipolar', y: 76 }] },
+          { pts: '130,88 290,88 344,142 76,142', fs: 12, lines: [{ text: 'Cerrada acotada', y: 120 }] },
+          { pts: '72,146 348,146 402,200 18,200', fs: 12.5, lines: [{ text: 'Abierta + Sondeo', y: 178 }] }
         ],
         embudo: [
-          '72,16 288,16 252,68 108,68',
-          '108,72 252,72 216,124 144,124',
-          '144,128 216,128 180,176'
+          { pts: '18,8 402,8 348,62 72,62', fs: 12.5, lines: [{ text: 'Abierta amplia', y: 40 }] },
+          { pts: '76,66 344,66 290,120 130,120', fs: 12, lines: [{ text: 'Sondeo', y: 98 }] },
+          { pts: '134,124 286,124 210,200', fs: 10.5, lines: [{ text: 'Cerrada /', y: 142 }, { text: 'Bipolar', y: 156 }] }
         ],
         rombo: [
-          '180,16 116,68 244,68',
-          '116,72 244,72 244,124 116,124',
-          '116,128 244,128 180,176'
+          { pts: '210,8 76,76 344,76', fs: 11, lines: [{ text: 'Cerrada', y: 52 }, { text: 'inicial', y: 66 }] },
+          { pts: '76,80 344,80 344,128 76,128', fs: 12.5, lines: [{ text: 'Abierta central', y: 109 }] },
+          { pts: '76,132 344,132 210,200', fs: 11, lines: [{ text: 'Cerrada', y: 152 }, { text: 'final', y: 166 }] }
         ]
       };
-      var labels = shape === 'piramide'
-        ? ['Cerrada / Bipolar', 'Cerrada acotada', 'Abierta + Sondeo']
-        : (shape === 'embudo' ? ['Abierta amplia', 'Sondeo', 'Cerrada / Bipolar'] : ['Cerrada inicial', 'Abierta central', 'Cerrada final']);
-      var ys = [52, 103, 154];
 
-      var html = polys[shape].map(function (pts, idx) {
+      var html = (bandsByShape[shape] || bandsByShape.piramide).map(function (b, idx) {
         var act = idx === band;
+        var textColor = act ? 'var(--primary)' : 'var(--ink-secondary)';
+        var weight = act ? '700' : '600';
+        var texts = b.lines.map(function (ln) {
+          return '<text x="210" y="' + ln.y + '" text-anchor="middle" font-size="' + b.fs + '" font-weight="' + weight + '" fill="' + textColor + '">' + esc(ln.text) + '</text>';
+        }).join('');
         return (
-          '<polygon points="' + pts + '" fill="' + (act ? 'var(--primary-soft)' : 'var(--surface)') + '" stroke="' + (act ? 'var(--primary)' : 'var(--border-strong)') + '" stroke-width="' + (act ? '2.5' : '1.4') + '"></polygon>' +
-          '<text x="180" y="' + ys[idx] + '" text-anchor="middle" font-size="11.5" font-weight="' + (act ? '700' : '600') + '" fill="' + (act ? 'var(--primary)' : 'var(--ink-secondary)') + '">' + esc(labels[idx]) + '</text>'
+          '<polygon points="' + b.pts + '" fill="' + (act ? 'var(--primary-soft)' : 'var(--surface)') + '" stroke="' + (act ? 'var(--primary)' : 'var(--border-strong)') + '" stroke-width="' + (act ? '2.5' : '1.4') + '"></polygon>' +
+          texts
         );
       }).join('');
       svgEl.innerHTML = html;
@@ -990,7 +1003,34 @@
       valRes.textContent = d.passesValid ? '✓ Pasa' : '✕ Falla';
       gVer.className = 'lab-gate-card ' + (d.passesVerif ? 'is-ok' : 'is-fail');
       gVal.className = 'lab-gate-card ' + (d.passesValid ? 'is-ok' : 'is-fail');
-      verdEl.textContent = d.verdict;
+
+      var accent = 'var(--warning)';
+      var soft = 'var(--warning-soft)';
+      var badge = '⚠ Alerta';
+      var title = 'Demanda ' + d.label + ' · ' + (d.passesVerif ? 'Falla Validación' : 'Falla Verificación');
+      if (d.passesVerif && d.passesValid) {
+        accent = 'var(--success)';
+        soft = 'var(--success-soft)';
+        badge = '✓ Aprobada';
+        title = 'Demanda ' + d.label + ' · Pasa V&V';
+      } else if (!d.passesVerif && !d.passesValid) {
+        accent = 'var(--danger)';
+        soft = 'var(--danger-soft)';
+        badge = '✕ Bloqueada';
+        title = 'Demanda ' + d.label + ' · Falla V&V';
+      }
+
+      verdEl.style.setProperty('--callout-accent', accent);
+      verdEl.style.setProperty('--callout-soft', soft);
+      verdEl.innerHTML =
+        '<div class="lab-cycle-callout-head">' +
+        '  <span class="lab-cycle-callout-step">' + esc(badge) + '</span>' +
+        '  <strong class="lab-cycle-callout-title">' + esc(title) + '</strong>' +
+        '</div>' +
+        '<p class="lab-cycle-callout-body">' + esc(d.verdict) + '</p>';
+      verdEl.classList.remove('anim-pop');
+      void verdEl.offsetWidth;
+      verdEl.classList.add('anim-pop');
     }
 
     var demBtns = container.querySelectorAll('[data-l4-dem]');
@@ -1032,12 +1072,36 @@
       '    <div class="lab-subhead">Panel B · Matriz Impacto vs. Esfuerzo</div>' +
       '    <div class="chip-group" style="margin-bottom:0.75rem;">' + itemBtns + '</div>' +
       '    <div class="lab-matrix-2x2">' +
-      '      <div class="lab-quad" data-quad="Ganancias rápidas"><strong>Ganancias rápidas</strong><small>Alto Imp. / Bajo Esf.</small></div>' +
-      '      <div class="lab-quad" data-quad="Grandes proyectos"><strong>Grandes proyectos</strong><small>Alto Imp. / Alto Esf.</small></div>' +
-      '      <div class="lab-quad" data-quad="Actividades menores"><strong>Actividades menores</strong><small>Bajo Imp. / Bajo Esf.</small></div>' +
-      '      <div class="lab-quad" data-quad="Tareas ingratas"><strong>Tareas ingratas</strong><small>Bajo Imp. / Alto Esf.</small></div>' +
+      '      <div class="lab-quad" data-quad="Ganancias rápidas" data-tone="success">' +
+      '        <strong>Ganancias rápidas</strong>' +
+      '        <div class="lab-quad-metrics">' +
+      '          <span class="lab-quad-pill">↑ Alto Impacto</span>' +
+      '          <span class="lab-quad-pill">↓ Bajo Esfuerzo</span>' +
+      '        </div>' +
+      '      </div>' +
+      '      <div class="lab-quad" data-quad="Grandes proyectos" data-tone="primary">' +
+      '        <strong>Grandes proyectos</strong>' +
+      '        <div class="lab-quad-metrics">' +
+      '          <span class="lab-quad-pill">↑ Alto Impacto</span>' +
+      '          <span class="lab-quad-pill">↑ Alto Esfuerzo</span>' +
+      '        </div>' +
+      '      </div>' +
+      '      <div class="lab-quad" data-quad="Actividades menores" data-tone="warning">' +
+      '        <strong>Actividades menores</strong>' +
+      '        <div class="lab-quad-metrics">' +
+      '          <span class="lab-quad-pill">↓ Bajo Impacto</span>' +
+      '          <span class="lab-quad-pill">↓ Bajo Esfuerzo</span>' +
+      '        </div>' +
+      '      </div>' +
+      '      <div class="lab-quad" data-quad="Tareas ingratas" data-tone="danger">' +
+      '        <strong>Tareas ingratas</strong>' +
+      '        <div class="lab-quad-metrics">' +
+      '          <span class="lab-quad-pill">↓ Bajo Impacto</span>' +
+      '          <span class="lab-quad-pill">↑ Alto Esfuerzo</span>' +
+      '        </div>' +
+      '      </div>' +
       '    </div>' +
-      '    <div class="lab-status" id="l5-mat-status"></div>' +
+      '    <div class="lab-status lab-cycle-callout lab-mat-callout" id="l5-mat-status" aria-live="polite"></div>' +
       '  </div>' +
       '</div>'
     );
@@ -1096,6 +1160,33 @@
     // Matrix
     var matStatus = container.querySelector('#l5-mat-status');
     var quads = container.querySelectorAll('.lab-quad');
+    var quadMeta = {
+      success: {
+        accent: 'var(--success)',
+        soft: 'var(--success-soft)',
+        action: '⚡ Hacer primero',
+        icon: '<svg width="26" height="26" viewBox="0 0 36 36" aria-hidden="true"><polygon points="20,4 8,20 17,20 15,32 28,15 19,15" fill="var(--success-soft)" stroke="var(--success)" stroke-width="2.2" stroke-linejoin="round"></polygon></svg>'
+      },
+      primary: {
+        accent: 'var(--primary)',
+        soft: 'var(--primary-soft)',
+        action: 'Planificar con Slicing',
+        icon: '<svg width="26" height="26" viewBox="0 0 36 36" aria-hidden="true"><rect x="6" y="6" width="24" height="6" rx="2" fill="var(--primary-soft)" stroke="var(--primary)" stroke-width="1.8"></rect><rect x="6" y="15" width="24" height="6" rx="2" fill="var(--primary-soft)" stroke="var(--primary)" stroke-width="1.8"></rect><rect x="6" y="24" width="24" height="6" rx="2" fill="var(--primary-soft)" stroke="var(--primary)" stroke-width="1.8"></rect><line x1="18" y1="12" x2="18" y2="15" stroke="var(--primary)" stroke-width="1.8"></line><line x1="18" y1="21" x2="18" y2="24" stroke="var(--primary)" stroke-width="1.8"></line></svg>'
+      },
+      warning: {
+        accent: 'var(--warning)',
+        soft: 'var(--warning-soft)',
+        action: 'Relleno secundario',
+        icon: '<svg width="26" height="26" viewBox="0 0 36 36" aria-hidden="true"><line x1="9" y1="6" x2="27" y2="6" stroke="var(--warning)" stroke-width="2.2" stroke-linecap="round"></line><line x1="9" y1="30" x2="27" y2="30" stroke="var(--warning)" stroke-width="2.2" stroke-linecap="round"></line><path d="M 11 6 L 25 6 C 25 13 18 16 18 18 C 18 20 25 23 25 30 L 11 30 C 11 23 18 20 18 18 C 18 16 11 13 11 6 Z" fill="var(--warning-soft)" stroke="var(--warning)" stroke-width="1.8" stroke-linejoin="round"></path></svg>'
+      },
+      danger: {
+        accent: 'var(--danger)',
+        soft: 'var(--danger-soft)',
+        action: '✕ Descartar o posponer',
+        icon: '<svg width="26" height="26" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="12" fill="var(--danger-soft)" stroke="var(--danger)" stroke-width="2.2"></circle><line x1="9.5" y1="9.5" x2="26.5" y2="26.5" stroke="var(--danger)" stroke-width="2.4" stroke-linecap="round"></line></svg>'
+      }
+    };
+
     function showMatrixItem(id) {
       var it = items.filter(function (x) { return x.id === id; })[0] || items[0];
       if (!it) return;
@@ -1106,7 +1197,24 @@
           quads[q].classList.remove('is-active');
         }
       }
-      matStatus.innerHTML = '<strong>' + esc(it.quad) + ' (' + esc(it.imp) + ' / ' + esc(it.esf) + '):</strong> ' + esc(it.tip);
+      var meta = quadMeta[it.color] || quadMeta.primary;
+      matStatus.style.setProperty('--callout-accent', meta.accent);
+      matStatus.style.setProperty('--callout-soft', meta.soft);
+      matStatus.innerHTML =
+        '<div class="lab-mat-callout-inner">' +
+        '  <div class="lab-mat-icon">' + meta.icon + '</div>' +
+        '  <div class="lab-mat-content">' +
+        '    <div class="lab-cycle-callout-head">' +
+        '      <span class="lab-cycle-callout-step">' + esc(meta.action) + '</span>' +
+        '      <strong class="lab-cycle-callout-title">' + esc(it.quad) + '</strong>' +
+        '      <span class="lab-mat-ratio">' + esc(it.imp) + ' · ' + esc(it.esf) + '</span>' +
+        '    </div>' +
+        '    <p class="lab-cycle-callout-body">' + esc(it.tip) + '</p>' +
+        '  </div>' +
+        '</div>';
+      matStatus.classList.remove('anim-pop');
+      void matStatus.offsetWidth;
+      matStatus.classList.add('anim-pop');
     }
 
     var itemBtns = container.querySelectorAll('[data-l5-item]');

@@ -1764,6 +1764,54 @@ textarea {
   color: var(--ink-secondary);
 }
 
+.lab-cycle-callout {
+  --callout-accent: var(--primary);
+  --callout-soft: var(--primary-soft);
+  margin-top: 0.85rem;
+  padding: 0.88rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--callout-soft);
+  border: 1.5px solid var(--callout-accent);
+  border-left: 5px solid var(--callout-accent);
+  box-shadow: var(--shadow-sm);
+  color: var(--ink);
+}
+
+.lab-cycle-callout-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.lab-cycle-callout-step {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.14rem 0.52rem;
+  border-radius: 999px;
+  background: var(--callout-accent);
+  color: var(--surface-elevated);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.lab-cycle-callout-title {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--callout-accent);
+}
+
+.lab-cycle-callout-body {
+  margin: 0;
+  font-size: 0.93rem;
+  font-weight: 500;
+  line-height: 1.48;
+  color: var(--ink);
+}
+
 .lab-cycle-track {
   display: flex;
   flex-wrap: wrap;
@@ -1801,13 +1849,16 @@ textarea {
 }
 
 .lab-quote {
-  padding: 0.75rem 0.9rem;
+  padding: 0.85rem 1rem;
   border-radius: var(--radius-sm);
   background: var(--surface-elevated);
   border: 1px solid var(--border);
+  border-left: 3px solid var(--border-strong);
   font-style: italic;
-  font-size: 0.88rem;
-  margin-bottom: 0.75rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--ink);
+  margin-bottom: 0.8rem;
 }
 
 .lab-gates-row {
@@ -1892,27 +1943,115 @@ textarea {
 }
 
 .lab-quad {
-  padding: 0.8rem;
-  border-radius: var(--radius-sm);
-  border: 1.5px solid var(--border);
+  --quad-accent: var(--primary);
+  --quad-soft: var(--primary-soft);
+  padding: 0.9rem 0.95rem;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border-strong);
   background: var(--surface-elevated);
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
-  opacity: 0.55;
-  transition: opacity 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
+  gap: 0.5rem;
+  opacity: 0.68;
+  transition: opacity 0.16s ease, border-color 0.16s ease, background-color 0.16s ease, transform 0.16s ease, box-shadow 0.16s ease;
 }
 
-.lab-quad small {
-  font-size: 0.76rem;
-  color: var(--ink-secondary);
+.lab-quad[data-tone="success"] {
+  --quad-accent: var(--success);
+  --quad-soft: var(--success-soft);
+}
+
+.lab-quad[data-tone="primary"] {
+  --quad-accent: var(--primary);
+  --quad-soft: var(--primary-soft);
+}
+
+.lab-quad[data-tone="warning"] {
+  --quad-accent: var(--warning);
+  --quad-soft: var(--warning-soft);
+}
+
+.lab-quad[data-tone="danger"] {
+  --quad-accent: var(--danger);
+  --quad-soft: var(--danger-soft);
+}
+
+.lab-quad strong {
+  font-size: 0.96rem;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.lab-quad-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.38rem;
+}
+
+.lab-quad-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.24rem 0.56rem;
+  border-radius: 999px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  line-height: 1.2;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  color: var(--ink);
 }
 
 .lab-quad.is-active {
   opacity: 1;
-  border-color: var(--primary);
-  background: var(--primary-soft);
+  border-color: var(--quad-accent);
+  background: var(--quad-soft);
+  box-shadow: var(--shadow-sm);
   transform: scale(1.02);
+}
+
+.lab-quad.is-active strong {
+  color: var(--quad-accent);
+}
+
+.lab-quad.is-active .lab-quad-pill {
+  background: var(--surface-elevated);
+  border-color: var(--quad-accent);
+  color: var(--quad-accent);
+}
+
+.lab-mat-callout-inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+}
+
+.lab-mat-icon {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--surface-elevated);
+  border: 1.5px solid var(--callout-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lab-mat-content {
+  min-width: 0;
+  flex: 1;
+}
+
+.lab-mat-ratio {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.14rem 0.5rem;
+  border-radius: 999px;
+  background: var(--surface-elevated);
+  border: 1px solid var(--callout-accent);
+  color: var(--ink);
+  font-size: 0.76rem;
+  font-weight: 700;
 }
 
 .lab-lane {
