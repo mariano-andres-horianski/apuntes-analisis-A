@@ -49,10 +49,16 @@ Sección aislada con **5 páginas dedicadas** para practicar habilidades clave a
 - **Duelos “X vs. Y” (`tool=duels`)**: comparativa rápida y **mini-juego de 32 escenarios** sobre **8 pares clásicos de examen** (*Verificación vs. Validación*, *Agregación vs. Composición*, *«include» vs. «extend»*, etc.).
 - **Mini casos de estudio (`tool=cases`)**: **4 enunciados de parcial** con borrador autoguardado, **checklist de 8 puntos** y **solución de referencia** desplegable.
 
-### 5. Extras transversales
+### 5. Guía Completa de Parciales (`#exam-prep`)
+Página aislada orientada a resolver con precisión consignas reales de parcial y final:
+- **Guía por Ejes (`tab=guide`)**: **5 bloques teóricos** con ejemplos justificados, contrastes (*modelando vs. sin modelar*, *Enfoque Sistémico ↔ Ing. de Software*, *fases de requisitos por ciclo de vida*) y tablas comparativas.
+- **19 Preguntas Reales de Parcial (`tab=questions`)**: consignas exactas en 3 sets (*9 + 5 + 5*) con borrador autoguardado, rúbrica interactiva de corrección, respuesta modelo estructurada y alertas de trampas típicas.
+- **Talleres Guiados (`tab=drills`)**: clasificador TGS de 5 criterios (*Telefonía*, *Respiratorio*, *Homebanking*, *Reloj*), armador de Requerimiento Funcional completo con distractores técnicos, comparador de Caso de Uso Completo (1 vs. 2 columnas) y clasificador **FURPS+**.
+
+### 6. Extras transversales
 - **Glosario buscable**: 42 conceptos clave del apunte filtrables por texto y unidad desde cualquier pantalla.
 - **Tema Claro / Oscuro**: conmutador persistente en la barra superior.
-- **Progreso local**: capítulos completados en el recorrido, avance en entrenamiento (`ads_practice_state_v1`), historial de exámenes, preguntas a repasar, mapas explorados, estado de indagación y notas personales guardados en `localStorage` (con respaldo en memoria si el navegador restringe almacenamiento en archivos locales).
+- **Progreso local**: capítulos completados en el recorrido, avance en entrenamiento (`ads_practice_state_v1`), avance de parciales (`ads_exam_prep_state_v1`), historial de exámenes, preguntas a repasar, mapas explorados, estado de indagación y notas personales guardados en `localStorage` (con respaldo en memoria si el navegador restringe almacenamiento en archivos locales).
 
 ---
 
@@ -89,7 +95,8 @@ No requiere instalar Node, Python ni levantar ningún servidor:
 ├── apunte.md              # Apunte completo de Análisis y Diseño de Sistemas A (U1–U6)
 ├── css/
 │   ├── styles.css         # Sistema de diseño claro/oscuro, grillas y visor SVG
-│   └── practice.css       # Estilos aislados de la sección Entrenamiento (#practice)
+│   ├── practice.css       # Estilos aislados de la sección Entrenamiento (#practice)
+│   └── exam-prep.css      # Estilos aislados de la sección Parciales (#exam-prep)
 ├── js/
 │   ├── data-units.js      # Metadata de unidades (U1–U6) y glosario de 42 términos
 │   ├── data-quiz.js       # Banco de 72 preguntas multiple choice (12 por unidad)
@@ -99,6 +106,8 @@ No requiere instalar Node, Python ni levantar ningún servidor:
 │   ├── journey-labs.js    # 8 laboratorios interactivos animados en SVG y simuladores
 │   ├── data-practice.js   # Datos de entrenamiento (flashcards, bugs, entrevistas, duelos, casos)
 │   ├── practice.js        # Motor aislado de las 5 herramientas de Entrenamiento
+│   ├── data-exam-prep.js  # Guía teórica (5 ejes), 19 preguntas de parcial y talleres
+│   ├── exam-prep.js       # Motor aislado de Parciales (#exam-prep)
 │   └── app.js             # Router, recorrido guiado, exámenes, mapas y estado local
 └── README.md
 ```

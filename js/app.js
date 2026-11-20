@@ -189,6 +189,10 @@
     practice: {
       tool: 'flashcards'
     },
+    examPrep: {
+      tab: 'guide',
+      questionId: null
+    },
     inquiry: {
       unitFilter: 'all', // 'all' | 'integradora' | 1..6
       typeFilter: 'all', // 'all' | 'comprension' | 'contraste' | 'caso' | 'integracion'
@@ -1642,6 +1646,12 @@
     }
   }
 
+  function unmountExamPrep() {
+    if (global.ADS_EXAM_PREP && typeof global.ADS_EXAM_PREP.unmount === 'function') {
+      global.ADS_EXAM_PREP.unmount();
+    }
+  }
+
   function renderJourney() {
     var chapters = getJourneyPool();
     if (chapters.length === 0) {
@@ -1845,7 +1855,7 @@
     var raw = (window.location.hash || '#home').replace(/^#/, '');
     var parts = raw.split('?');
     var route = parts[0] || 'home';
-    if (['home', 'journey', 'quiz', 'maps', 'inquiry', 'practice'].indexOf(route) === -1) route = 'home';
+    if (['home', 'journey', 'quiz', 'maps', 'inquiry', 'practice', 'exam-prep'].indexOf(route) === -1) route = 'home';
 
     var params = {};
     if (parts[1]) {
@@ -1868,12 +1878,25 @@
     if (runtime.route === 'practice' && parsed.route !== 'practice') {
       unmountPractice();
     }
+    if (runtime.route === 'exam-prep' && parsed.route !== 'exam-prep') {
+      unmountExamPrep();
+    }
     runtime.route = parsed.route;
 
     if (parsed.route === 'practice' && parsed.params.tool) {
       var validPracticeTools = (global.ADS_PRACTICE && global.ADS_PRACTICE.validTools) || ['flashcards', 'bugs', 'interview', 'duels', 'cases'];
       if (validPracticeTools.indexOf(parsed.params.tool) !== -1) {
         runtime.practice.tool = parsed.params.tool;
+      }
+    }
+
+    if (parsed.route === 'exam-prep') {
+      var validEpTabs = (global.ADS_EXAM_PREP && global.ADS_EXAM_PREP.validTabs) || ['guide', 'questions', 'drills'];
+      runtime.examPrep.questionId = parsed.params.q || null;
+      if (parsed.params.tab && validEpTabs.indexOf(parsed.params.tab) !== -1) {
+        runtime.examPrep.tab = parsed.params.tab;
+      } else if (parsed.params.q) {
+        runtime.examPrep.tab = 'questions';
       }
     }
 
@@ -1949,6 +1972,8 @@
       bindInquiryEvents(main);
     } else if (runtime.route === 'practice' && global.ADS_PRACTICE) {
       global.ADS_PRACTICE.mount(main, runtime.practice.tool);
+    } else if (runtime.route === 'exam-prep' && global.ADS_EXAM_PREP) {
+      global.ADS_EXAM_PREP.mount(main, runtime.examPrep.tab, runtime.examPrep.questionId);
     }
   }
 
@@ -2320,6 +2345,7 @@
     if (typeof document === 'undefined') return;
     unmountJourneyLabs();
     unmountPractice();
+    unmountExamPrep();
     updateNavActiveState();
     var main = document.getElementById('app-main');
     if (!main) return;
@@ -2330,7 +2356,7 @@
       main.classList.remove('is-maps-wide');
     }
 
-    if (runtime.route === 'maps' || runtime.route === 'journey' || runtime.route === 'practice') {
+    if (runtime.route === 'maps' || runtime.route === 'journey' || runtime.route === 'practice' || runtime.route === 'exam-prep') {
       main.classList.add('is-wide');
     } else {
       main.classList.remove('is-wide');
@@ -2348,6 +2374,8 @@
       main.innerHTML = renderInquiry();
     } else if (runtime.route === 'practice') {
       main.innerHTML = global.ADS_PRACTICE ? global.ADS_PRACTICE.render(runtime.practice.tool) : '';
+    } else if (runtime.route === 'exam-prep') {
+      main.innerHTML = global.ADS_EXAM_PREP ? global.ADS_EXAM_PREP.render(runtime.examPrep.tab, runtime.examPrep.questionId) : '';
     }
 
     bindCurrentViewEvents();
