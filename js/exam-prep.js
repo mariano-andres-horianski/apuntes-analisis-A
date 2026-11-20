@@ -98,8 +98,42 @@
     ucFormat: '1col' // '1col' | '2col'
   };
 
+  var activeKeyHandler = null;
+
   function unmount() {
-    // Reservado para futuras suscripciones globales
+    if (activeKeyHandler && typeof document !== 'undefined') {
+      document.removeEventListener('keydown', activeKeyHandler);
+    }
+    activeKeyHandler = null;
+    if (typeof document !== 'undefined') {
+      var lbHost = document.querySelector('#ep-lightbox-host');
+      if (lbHost) lbHost.innerHTML = '';
+    }
+  }
+
+  function getVisuals() {
+    return global.ADS_EXAM_PREP_VISUALS || {};
+  }
+
+  function renderSectionVisual(guideId, secIdx) {
+    var key = guideId + ':' + secIdx;
+    var v = getVisuals()[key];
+    if (!v || !v.svg) return '';
+    var allowedAccents = ['primary', 'teal', 'violet', 'warning', 'success', 'danger'];
+    var accent = allowedAccents.indexOf(v.accent) !== -1 ? v.accent : 'primary';
+    return (
+      '<figure class="ep-visual-card" data-accent="' + accent + '">' +
+      '  <div class="ep-visual-head">' +
+      '    <div class="ep-visual-meta">' +
+      '      <span class="ep-visual-kicker">' + esc(v.kicker) + '</span>' +
+      '      <strong class="ep-visual-title">' + esc(v.title) + '</strong>' +
+      '    </div>' +
+      '    <button type="button" class="ep-visual-zoom-btn" data-ep-zoom="' + esc(key) + '" aria-label="Ampliar diagrama: ' + esc(v.title) + '">Ampliar ⤢</button>' +
+      '  </div>' +
+      '  <div class="ep-visual-stage">' + v.svg + '</div>' +
+      (v.caption ? '  <figcaption class="ep-visual-caption">' + esc(v.caption) + '</figcaption>' : '') +
+      '</figure>'
+    );
   }
 
   // =========================================================================
@@ -152,7 +186,7 @@
       );
     }).join('');
 
-    var sectionsHtml = g.sections.map(function (sec) {
+    var sectionsHtml = g.sections.map(function (sec, secIdx) {
       var bulletsHtml = Array.isArray(sec.bullets) && sec.bullets.length
         ? '<ul class="ep-section-bullets">' + sec.bullets.map(function (b) { return '<li>' + esc(b) + '</li>'; }).join('') + '</ul>'
         : '';
@@ -163,7 +197,8 @@
         bulletsHtml +
         (sec.table ? renderTableHtml(sec.table) : '') +
         (sec.callout ? '<div class="ep-callout">' + esc(sec.callout) + '</div>' : '') +
-        '</article>'
+        '</article>' +
+        renderSectionVisual(g.id, secIdx)
       );
     }).join('');
 
@@ -207,6 +242,7 @@
         : '<a href="#exam-prep?tab=questions" class="btn btn-primary btn-sm">Practicar las 19 preguntas →</a>') +
       '    </div>' +
       '  </section>' +
+      '  <div id="ep-lightbox-host"></div>' +
       '</div>'
     );
   }
@@ -658,6 +694,61 @@
               refresh();
               break;
             }
+          }
+        });
+      }
+
+      var lbHost = container.querySelector('#ep-lightbox-host');
+      function closeLightbox() {
+        if (lbHost) lbHost.innerHTML = '';
+        if (activeKeyHandler && typeof document !== 'undefined' && typeof document.removeEventListener === 'function') {
+          document.removeEventListener('keydown', activeKeyHandler);
+        }
+        activeKeyHandler = null;
+      }
+
+      var zoomBtns = container.querySelectorAll('[data-ep-zoom]');
+      for (var z = 0; z < zoomBtns.length; z++) {
+        zoomBtns[z].addEventListener('click', function (ev) {
+          var key = ev.currentTarget.getAttribute('data-ep-zoom');
+          var v = getVisuals()[key];
+          if (!v || !lbHost) return;
+          closeLightbox();
+          var allowedAccents = ['primary', 'teal', 'violet', 'warning', 'success', 'danger'];
+          var accent = allowedAccents.indexOf(v.accent) !== -1 ? v.accent : 'primary';
+          var zoomSvg = String(v.svg || '').replace(/epv-/g, 'epv-lb-');
+          lbHost.innerHTML =
+            '<div class="ep-lightbox-backdrop" id="ep-lightbox-backdrop">' +
+            '  <div class="ep-lightbox-dialog ep-visual-card" data-accent="' + accent + '" role="dialog" aria-modal="true" aria-label="' + esc(v.title) + '">' +
+            '    <div class="ep-visual-head">' +
+            '      <div class="ep-visual-meta">' +
+            '        <span class="ep-visual-kicker">' + esc(v.kicker) + ' · Vista ampliada</span>' +
+            '        <strong class="ep-visual-title">' + esc(v.title) + '</strong>' +
+            '      </div>' +
+            '      <button type="button" class="btn btn-secondary btn-sm" id="btn-ep-close-zoom" aria-label="Cerrar diagrama ampliado">Cerrar ✕</button>' +
+            '    </div>' +
+            '    <div class="ep-visual-stage ep-lightbox-stage">' + zoomSvg + '</div>' +
+            (v.caption ? '    <p class="ep-visual-caption" style="margin:0;">' + esc(v.caption) + '</p>' : '') +
+            '  </div>' +
+            '</div>';
+
+          var closeBtn = lbHost.querySelector('#btn-ep-close-zoom');
+          if (closeBtn) closeBtn.addEventListener('click', closeLightbox);
+
+          var backdrop = lbHost.querySelector('#ep-lightbox-backdrop');
+          if (backdrop) {
+            backdrop.addEventListener('click', function (bev) {
+              if (bev.target === backdrop) closeLightbox();
+            });
+          }
+
+          if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
+            activeKeyHandler = function (kev) {
+              if (kev.key === 'Escape') {
+                closeLightbox();
+              }
+            };
+            document.addEventListener('keydown', activeKeyHandler);
           }
         });
       }
